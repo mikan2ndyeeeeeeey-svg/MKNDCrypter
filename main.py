@@ -1,10 +1,14 @@
+__version__ = "1.0"
+__author__ = "Mikan"
+__license__ = "MIT"
+
 import atexit
 import requests
 import os
 import sys
 import json
 import base64
-import fitz         # PyMuPDF
+import fitz
 import pygame
 import lzma
 import time
@@ -358,18 +362,15 @@ class MKNDecApp(ctk.CTk):
             self.restored_bytes = data
             ext = Path(fname).suffix.lower()
 
-            # 既存のビュー領域をクリア
             for w in self.viewer_area.winfo_children():
                 w.destroy()
 
-            # テキスト系
             if ext in [".txt",".py",".md",".json",".csv",".log",".ini"]:
                 self.viewer_text = ctk.CTkTextbox(self.viewer_area)
                 self.viewer_text.pack(fill="both", expand=True, padx=6, pady=6)
                 text = data.decode("utf-8", errors="replace")
                 self.viewer_text.insert("0.0", text)
 
-            # 画像系
             elif ext in [".png",".jpg",".jpeg",".bmp",".gif",".webp"]:
                 tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
                 tmp_file.write(data)
@@ -385,11 +386,10 @@ class MKNDecApp(ctk.CTk):
                 except:
                     pass
 
-            # PDF
             elif ext == ".pdf":
                 tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
                 doc = fitz.open(stream=data, filetype="pdf")
-                page = doc[0]  # 1ページ目のみ表示
+                page = doc[0]
                 pix = page.get_pixmap()
                 pix.save(tmp_file.name)
                 img = Image.open(tmp_file.name)
@@ -403,7 +403,6 @@ class MKNDecApp(ctk.CTk):
                 except:
                     pass
 
-            # 音声ファイル
             elif ext in [".mp3", ".wav"]:
                 tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
                 tmp_file.write(data)
@@ -418,7 +417,6 @@ class MKNDecApp(ctk.CTk):
                 btn.pack(pady=20)
                 atexit.register(lambda: os.unlink(tmp_file.name))
 
-            # その他
             else:
                 lbl = ctk.CTkLabel(self.viewer_area, text=f"{len(data)} bytes (プレビュー非対応)")
                 lbl.pack(expand=True)
