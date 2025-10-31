@@ -1,12 +1,17 @@
+import atexit
+import requests
 import os
 import sys
 import json
 import base64
+import fitz         # PyMuPDF
+import pygame
 import lzma
 import time
 import tempfile
 import shutil
 import hashlib
+import webbrowser
 from pathlib import Path
 import subprocess
 
@@ -155,10 +160,7 @@ class MKNDContainer:
 class MKNDecApp(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("MikanNoid EnCrypter (.mkndec) - Editable")
-        self.geometry("980x700")
-        ctk.set_appearance_mode("dark")
-        ctk.set_default_color_theme("blue")
+
         self.file_paths = []
         self.icon_file = None
         self.loaded_package_path = None
@@ -166,7 +168,37 @@ class MKNDecApp(ctk.CTk):
         self.restored_bytes = None
         self.palette_color = "#1abc9c"
         self.current_image_label = None
+
+        self.title("MKNDCrypter")
+
+        # GitHubからアイコンをダウンロードして設定
+        self.icon_file = self.download_icon_temp(
+            "https://raw.githubusercontent.com/mikan2ndyeeeeeeey-svg/MKNDCrypter/main/icon.ico"
+        )
+        try:
+            self.iconbitmap(self.icon_file)
+        except Exception as e:
+            print(f"アイコン設定失敗: {e}")
+
+        ctk.set_appearance_mode("dark")
+        ctk.set_default_color_theme("blue")
+
         self._create_widgets()
+        self.after(10, lambda: self.state("zoomed"))
+
+    def download_icon_temp(self, url: str) -> str:
+        """GitHub から icon.ico をダウンロードして実行フォルダに置き、終了時に削除"""
+        icon_path = Path.cwd() / "icon.ico"
+        try:
+            r = requests.get(url)
+            r.raise_for_status()
+            with open(icon_path, "wb") as f:
+                f.write(r.content)
+            # プログラム終了時に削除
+            atexit.register(lambda: icon_path.unlink(missing_ok=True))
+        except Exception as e:
+            print("アイコンダウンロード失敗:", e)
+        return str(icon_path)
 
     def _create_widgets(self):
         left = ctk.CTkFrame(self, width=460)
@@ -208,8 +240,13 @@ class MKNDecApp(ctk.CTk):
         self.viewer_image_label = None
         bottom = ctk.CTkFrame(self, height=60)
         bottom.pack(side="bottom", fill="x", padx=12, pady=6)
-        self.mode_switch = ctk.CTkSwitch(bottom, text="ライトモード", command=self.toggle_mode)
-        self.mode_switch.pack(side="left", padx=8)
+        self.mode_switch = ctk.CTkSwitch(
+        bottom,
+        text="ライトモード",
+        command=self.toggle_mode,
+        font=ctk.CTkFont(size=14, weight="bold")
+    )
+        self.mode_switch.pack(side="left", padx=8) 
         self.color_btn = ctk.CTkButton(bottom, text="アクセント色を選択", command=self.change_palette)
         self.color_btn.pack(side="left", padx=8)
 
@@ -297,32 +334,42 @@ class MKNDecApp(ctk.CTk):
         return pw
 
     def preview_file(self):
-        if not self.loaded_package_meta:
-            messagebox.showwarning("未選択", ".mkndec を読み込んでください")
-            return
-        fname = self.combobox_files.get()
-        if not fname:
-            messagebox.showwarning("未選択", "パッケージ内ファイルを選択してください")
-            return
-        password = self.require_password_or_prompt()
-        if not password:
-            messagebox.showwarning("パスワード必須", "パスワードを必要とします")
-            return
-        filemeta = self.loaded_package_meta["files"].get(fname)
-        if not filemeta:
-            messagebox.showerror("エラー", "ファイル情報が見つかりません")
-            return
         try:
+            if not self.loaded_package_meta:
+                messagebox.showwarning("未選択", ".mkndec を読み込んでください")
+                return
+            
+            fname = self.combobox_files.get()
+            if not fname:
+                messagebox.showwarning("未選択", "パッケージ内ファイルを選択してください")
+                return
+                
+            password = self.require_password_or_prompt()
+            if not password:
+                messagebox.showwarning("パスワード必須", "パスワードを必要とします")
+                return
+                
+            filemeta = self.loaded_package_meta["files"].get(fname)
+            if not filemeta:
+                messagebox.showerror("エラー", "ファイル情報が見つかりません")
+                return
+                
             data = MKNDContainer.decrypt_file(filemeta, password)
             self.restored_bytes = data
             ext = Path(fname).suffix.lower()
+
+            # 既存のビュー領域をクリア
             for w in self.viewer_area.winfo_children():
                 w.destroy()
+
+            # テキスト系
             if ext in [".txt",".py",".md",".json",".csv",".log",".ini"]:
                 self.viewer_text = ctk.CTkTextbox(self.viewer_area)
                 self.viewer_text.pack(fill="both", expand=True, padx=6, pady=6)
                 text = data.decode("utf-8", errors="replace")
                 self.viewer_text.insert("0.0", text)
+
+            # 画像系
             elif ext in [".png",".jpg",".jpeg",".bmp",".gif",".webp"]:
                 tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
                 tmp_file.write(data)
@@ -337,11 +384,47 @@ class MKNDecApp(ctk.CTk):
                     os.unlink(tmp_file.name)
                 except:
                     pass
+
+            # PDF
+            elif ext == ".pdf":
+                tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+                doc = fitz.open(stream=data, filetype="pdf")
+                page = doc[0]  # 1ページ目のみ表示
+                pix = page.get_pixmap()
+                pix.save(tmp_file.name)
+                img = Image.open(tmp_file.name)
+                img.thumbnail((800, 800))
+                photo = ImageTk.PhotoImage(img)
+                lbl = ctk.CTkLabel(self.viewer_area, image=photo)
+                lbl.image = photo
+                lbl.pack(expand=True)
+                try:
+                    os.unlink(tmp_file.name)
+                except:
+                    pass
+
+            # 音声ファイル
+            elif ext in [".mp3", ".wav"]:
+                tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
+                tmp_file.write(data)
+                tmp_file.close()
+                
+                def play_audio():
+                    pygame.mixer.init()
+                    pygame.mixer.music.load(tmp_file.name)
+                    pygame.mixer.music.play()
+                
+                btn = ctk.CTkButton(self.viewer_area, text="再生", command=play_audio)
+                btn.pack(pady=20)
+                atexit.register(lambda: os.unlink(tmp_file.name))
+
+            # その他
             else:
                 lbl = ctk.CTkLabel(self.viewer_area, text=f"{len(data)} bytes (プレビュー非対応)")
                 lbl.pack(expand=True)
+
         except Exception as e:
-            messagebox.showerror("復号エラー", f"復号に失敗しました: {e}")
+            messagebox.showerror("エラー", f"プレビューに失敗しました: {e}")
 
     def save_changes_to_package(self):
         if not self.loaded_package_meta or not self.loaded_package_path:
@@ -493,8 +576,12 @@ class MKNDecApp(ctk.CTk):
             messagebox.showerror("実行エラー", str(e))
 
     def toggle_mode(self):
-        mode = "light" if self.mode_switch.get() else "dark"
-        ctk.set_appearance_mode(mode)
+        if self.mode_switch.get():
+            ctk.set_appearance_mode("light")
+            self.mode_switch.configure(text="ダークモード")
+        else:
+            ctk.set_appearance_mode("dark")
+            self.mode_switch.configure(text="ライトモード")
 
     def change_palette(self):
         color = colorchooser.askcolor(title="アクセント色を選択")
