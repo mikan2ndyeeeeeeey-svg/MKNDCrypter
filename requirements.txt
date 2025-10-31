@@ -1,0 +1,6 @@
+customtkinter==5.2.2
+fitz==0.0.1.dev2
+Pillow==12.0.0
+pycryptodome==3.23.0
+pygame==2.6.1
+Requests==2.32.5
