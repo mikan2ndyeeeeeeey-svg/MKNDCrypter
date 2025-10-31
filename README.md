@@ -82,7 +82,7 @@ python main.py
 ## サポート
 
 不具合や改善要望は[**GitHub Issues**](https://github.com/mikan2ndyeeeeeeey-svg/MKNDCrypter/issues)から報告してください。  
-また開発者向けの技術的な質問は、[**Discord**](https://discord.gg/BgM77WshrK)のチケットで受けます。
+また開発者向けの技術的な質問や機能追加の要望などは、[**Discord**](https://discord.gg/BgM77WshrK)のチケットで相談してください
 
 ---
 
@@ -90,4 +90,8 @@ python main.py
 
 本プロジェクトは **MIT License** の下で公開されています。  
 MITライセンスは、ソフトウェアの利用、複製、改変、配布を自由に行うことを許可する非常に寛容なライセンスです。  
-ただし、著作権表示とライセンス文のコピーをソースや配布物に含める必要があります。  
+ただし、著作権表示とライセンス文のコピーをソースや配布物に含める必要があります。
+
+---
+
+**Copyright © 2025 Mikan**
