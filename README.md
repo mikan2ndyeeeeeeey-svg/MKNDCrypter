@@ -54,7 +54,8 @@ MKNDCrypterは、以下の機能を持つクロスプラットフォーム対応
 
 ## 使い方
 
-1. 本リポジトリをダウンロードします。  
+1. ZIPをダウンロードし解凍をします 
+<img width="1307" height="632" alt="スクリーンショット 2025-11-01 053143" src="https://github.com/user-attachments/assets/f1af139a-4d88-4963-863a-021d5f59ef21" />
 
 2. 必要モジュールをインストールします。  
 
@@ -80,8 +81,8 @@ python main.py
 
 ## サポート
 
-不具合や改善要望は[GitHub Issues](https://github.com/mikan2ndyeeeeeeey-svg/MKNDCrypter/issues)から報告してください。  
-開発者向けの技術的な質問は、コード内コメントやREADMEに記載されているモジュール構成を参照してください。
+不具合や改善要望は[**GitHub Issues**](https://github.com/mikan2ndyeeeeeeey-svg/MKNDCrypter/issues)から報告してください。  
+また開発者向けの技術的な質問は、[**Discord**](https://discord.gg/BgM77WshrK)のチケットで受けます。
 
 ---
 
