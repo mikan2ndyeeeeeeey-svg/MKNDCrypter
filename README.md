@@ -83,6 +83,7 @@ python main.py
 
 不具合や改善要望は[**GitHub Issues**](https://github.com/mikan2ndyeeeeeeey-svg/MKNDCrypter/issues)から報告してください。  
 また開発者向けの技術的な質問や機能追加の要望などは、[**Discord**](https://discord.gg/BgM77WshrK)のチケットで相談してください
+気軽に相談をしてください。
 
 ---
 
