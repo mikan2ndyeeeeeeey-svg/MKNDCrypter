@@ -61,9 +61,11 @@ MKNDCrypterは、以下の機能を持つクロスプラットフォーム対応
 ```bash
 pip install -r requirements.txt
 ```
+3. アプリケーションを起動します。
 ```bash
 python main.py
 ```
+4. GUI上で暗号化または復号化したいファイルを選択し、パスワードを入力して操作してください。
 
 ---
 
